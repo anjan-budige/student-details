@@ -3,15 +3,11 @@ import * as cheerio from "cheerio";
 
 export async function GET(request: Request) {
   try {
-    // Extracting query parameters
     const { searchParams } = new URL(request.url);
     const studyingYear = searchParams.get("studyingYear");
     const academicYear = searchParams.get("academicYear");
     const rollNo = searchParams.get("rollNo");
 
-    console.log("Parameters:", { studyingYear, academicYear, rollNo }); // Log parameters
-
-    // Checking if required parameters are provided
     if (!studyingYear || !academicYear || !rollNo) {
       return NextResponse.json(
         { error: "Missing required parameters" },
@@ -19,68 +15,78 @@ export async function GET(request: Request) {
       );
     }
 
-    // Constructing the URL for fetching results
     const yearText = studyingYear === "1st" ? "First" : "Second";
     const yearNumber = studyingYear === "1st" ? "1" : "2";
     const url = `https://tgbie.cgg.gov.in/ResultMemorandum.do?actionpart=getBieResult${yearText}YearGen&property%28pass_year%29=${academicYear}&year=${yearNumber}&category=G&property%28month%29=3&hallticket_no=${rollNo}`;
 
-    console.log("Constructed URL:", url); // Log the constructed URL
-
-    // Set up a fetch timeout using AbortController
+    console.log("Constructed URL:", url);
     const controller = new AbortController();
-    const timeout = setTimeout(() => controller.abort(), 50000); // 50 seconds timeout
+    const timeoutId = setTimeout(() => controller.abort(), 50000);
 
-    try {
-      // Fetching the data from the constructed URL
-      const response = await fetch(url, {
-        method: "GET",
-        headers: {
-          "User-Agent":
-            "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36",
-          Accept:
-            "text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,image/apng,*/*;q=0.8",
-          "Accept-Language": "en-US,en;q=0.9",
-        },
-        signal: controller.signal, // Attach the signal for timeout
-      });
 
-      clearTimeout(timeout); // Clear timeout if request completes in time
+    const response = await fetch(url, {
+      method: "GET",
+      headers: {
+        "User-Agent":
+          "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36", // Use a consistent, modern User-Agent
+        Accept:
+          "text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,image/apng,*/*;q=0.8",
+        "Accept-Language": "en-US,en;q=0.9",
+      },
+      signal: controller.signal,
+    });
 
-      // Check if the fetch was successful
-      if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
-      }
+    clearTimeout(timeoutId);
 
-      // Get the HTML content of the response
-      const html = await response.text();
-      const $ = cheerio.load(html);
+    if (!response.ok) {
+        // Log more details about the failed response
+        console.error(`HTTP error! status: ${response.status}, statusText: ${response.statusText}`);
+        const errorText = await response.text(); // Get the error response body
+        console.error("Error response body:", errorText);
 
-      // Extract the content related to the print page
-      const printPage = $("#print_page").html();
-
-      // If no printPage content is found, return a 404 error
-      if (!printPage) {
-        return NextResponse.json({ error: "No results found" }, { status: 404 });
-      }
-
-      // Return the result as JSON
-      return NextResponse.json({ data: printPage });
-
-    } catch (error) {
-      if (error.name === "AbortError") {
-        console.error("Fetch request timed out.");
         return NextResponse.json(
-          { error: "Request timed out. Please try again." },
-          { status: 408 }
+            { error: `HTTP error! status: ${response.status}`, details: errorText }, // Include error details in the response
+            { status: response.status }
         );
-      }
-      throw error;
     }
+
+    const html = await response.text();
+    //return NextResponse.json({ data: html});  //FOR DEBUG: Return raw HTML, remove cheerio
+
+    const $ = cheerio.load(html);
+    const printPage = $("#print_page").html();
+
+    if (!printPage) {
+      return NextResponse.json({ error: "No results found" }, { status: 404 });
+    }
+
+    console.log("printPage content length:", printPage.length); // Log the length of the extracted content
+    return NextResponse.json({ data: printPage });
+
   } catch (error) {
     console.error("Error fetching details:", error);
-    return NextResponse.json(
-      { error: "Failed to fetch student details" },
-      { status: 500 }
-    );
+
+    let errorMessage = "Failed to fetch student details";
+    let statusCode = 500;
+
+    // Use type guards and optional chaining for safer error handling
+    if (error instanceof Error) {
+      if (error.name === "AbortError") {
+        errorMessage = "Request timed out after 50 seconds";
+        statusCode = 504;
+      } else if (error.name === 'TypeError' && error.message?.includes('fetch failed')) {
+            // More robust way to access cause and message
+            const cause = (error as any).cause; // Cast to 'any' to bypass type checking temporarily
+            const causeMessage = cause && typeof cause === 'object' && 'message' in cause ? cause.message : undefined;
+            errorMessage = `Fetch failed: ${causeMessage || error.message || 'Unknown cause'}`;
+            statusCode = 500;
+        }
+    } else {
+        // Handle cases where 'error' is not an Error instance (e.g., a string, object, etc.)
+        errorMessage = `An unexpected error occurred: ${String(error)}`;
+    }
+
+
+    return NextResponse.json({ error: errorMessage }, { status: statusCode });
   }
 }
