@@ -41,7 +41,7 @@ function DetailsContent() {
     }
 
     const photoMatch = data.match(
-      /<img src="https?:\/\/tgbie\.cgg\.gov\.in:443\/scannedPhotos\/\d+\/\d+_\d+_photo\.jpg" style="width: 2\.8cm; height: 3\.5cm; vertical-align: middle; margin-top: 10px;">/ // photo
+      /<img src="https?:\/\/tgbie\.cgg\.gov\.in:443\/scannedPhotos\/\d+\/\d+_\d+_photo\.jpg"/ // photo
     );
     if (photoMatch && photoMatch.length > 0) {
       const photoMatchResult = photoMatch[0].match(/src="([^"]+)"/);
@@ -61,6 +61,8 @@ function DetailsContent() {
       )}`;
       marks = [totalMarks];
     }
+
+    
 
     return { name, photo, marks: marks.join(", ") };
   }
@@ -246,7 +248,7 @@ function convertTextToNumber(text: string): number {
     .map((word) => wordToNumber[word] || "")
     .join("");
 
-  return parseInt(numberString, 10);
+    return numberString ? parseInt(numberString, 10) : 0;
 }
 
 const styles = {
