@@ -40,7 +40,7 @@ export async function GET(request: Request) {
 
     if (!response.ok) {
         // Log more details about the failed response
-        console.error(HTTP error! status: ${response.status}, statusText: ${response.statusText});
+        console.error(`HTTP error! status: ${response.status}, statusText: ${response.statusText}`);
         const errorText = await response.text(); // Get the error response body
         console.error("Error response body:", errorText);
 
