@@ -26,37 +26,56 @@ export async function GET(request: Request) {
 
     console.log("Constructed URL:", url); // Log the constructed URL
 
-    // Fetching the data from the constructed URL
-    const response = await fetch(url, {
-      method: "GET",
-      headers: {
-        "User-Agent":
-          "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36",
-        Accept:
-          "text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,image/apng,*/*;q=0.8",
-        "Accept-Language": "en-US,en;q=0.9",
-      },
-    });
+    // Set up a fetch timeout using AbortController
+    const controller = new AbortController();
+    const timeout = setTimeout(() => controller.abort(), 50000); // 50 seconds timeout
 
-    // Check if the fetch was successful
-    if (!response.ok) {
-      throw new Error(`HTTP error! status: ${response.status}`);
+    try {
+      // Fetching the data from the constructed URL
+      const response = await fetch(url, {
+        method: "GET",
+        headers: {
+          "User-Agent":
+            "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36",
+          Accept:
+            "text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,image/apng,*/*;q=0.8",
+          "Accept-Language": "en-US,en;q=0.9",
+        },
+        signal: controller.signal, // Attach the signal for timeout
+      });
+
+      clearTimeout(timeout); // Clear timeout if request completes in time
+
+      // Check if the fetch was successful
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+
+      // Get the HTML content of the response
+      const html = await response.text();
+      const $ = cheerio.load(html);
+
+      // Extract the content related to the print page
+      const printPage = $("#print_page").html();
+
+      // If no printPage content is found, return a 404 error
+      if (!printPage) {
+        return NextResponse.json({ error: "No results found" }, { status: 404 });
+      }
+
+      // Return the result as JSON
+      return NextResponse.json({ data: printPage });
+
+    } catch (error) {
+      if (error.name === "AbortError") {
+        console.error("Fetch request timed out.");
+        return NextResponse.json(
+          { error: "Request timed out. Please try again." },
+          { status: 408 }
+        );
+      }
+      throw error;
     }
-
-    // Get the HTML content of the response
-    const html = await response.text(); // Log the HTML response for debugging
-    const $ = cheerio.load(html);
-
-    // Extract the content related to the print page
-    const printPage = $("#print_page").html();
-
-    // If no printPage content is found, return a 404 error
-    if (!printPage) {
-      return NextResponse.json({ error: "No results found" }, { status: 404 });
-    }
-
-    // Return the result as JSON
-    return NextResponse.json({ data: printPage });
   } catch (error) {
     console.error("Error fetching details:", error);
     return NextResponse.json(
