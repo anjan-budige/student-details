@@ -17,7 +17,7 @@ export function SearchForm() {
     >
       <div className="space-y-4">
         <h2 className="text-3xl font-bold text-gray-900">
-          Student Deatils Search
+          Student Details Search
         </h2>
         <p className="text-gray-600">
           Search for student information using name or roll number
