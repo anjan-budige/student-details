@@ -1,3 +1,4 @@
+// /api/details/route.ts
 import { NextResponse } from "next/server";
 import * as cheerio from "cheerio";
 
@@ -45,7 +46,7 @@ export async function GET(request: Request) {
         console.error("Error response body:", errorText);
 
         return NextResponse.json(
-            { error: HTTP error! status: ${response.status}, details: errorText }, // Include error details in the response
+            { error: `HTTP error! status: ${response.status}`, details: errorText }, // Include error details in the response
             { status: response.status }
         );
     }
@@ -78,7 +79,7 @@ export async function GET(request: Request) {
             // More robust way to access cause and message
             const cause = (error as any).cause; // Cast to 'any' to bypass type checking temporarily
             const causeMessage = cause && typeof cause === 'object' && 'message' in cause ? cause.message : undefined;
-            errorMessage = Fetch failed: ${causeMessage || error.message || 'Unknown cause'};
+            errorMessage = `Fetch failed: ${causeMessage || error.message || 'Unknown cause'}`;
             statusCode = 500;
         }
     } else {
