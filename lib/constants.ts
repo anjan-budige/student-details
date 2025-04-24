@@ -1,5 +1,5 @@
 export const ADMISSION_YEARS = Array.from(
-  { length: 5 }, 
+  { length: 6 }, 
   (_, i) => ({ 
     value: String(2020 + i), 
     label: String(2020 + i) 
