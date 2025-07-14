@@ -1,36 +1,35 @@
-This is a [Next.js](https://nextjs.org/) project bootstrapped with [`create-next-app`](https://github.com/vercel/next.js/tree/canary/packages/create-next-app).
+# 🏫 Student Details - Intermediate Results Explorer (TSBIE + IndiaResults)
 
-## Getting Started
+A data exploration and search tool built with **Next.js** to retrieve student details from publicly available **Intermediate results data** using **TSBIE** and **IndiaResults** post-exploration vulnerability.
 
-First, run the development server:
+## 📌 Overview
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun run dev
-```
+This project was inspired by a post-exploration of data flow from **IndiaResults** and **TSBIE** during Intermediate board result publishing. By analyzing the POST data and endpoint responses, a search interface was built to allow querying of student results based on their hall ticket numbers.
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+> ⚠️ **Disclaimer**: This project is for educational and research purposes only. It highlights the importance of data privacy and secure API design in public examination systems. No data is stored or misused.
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+---
 
-This project uses [`next/font`](https://nextjs.org/docs/basic-features/font-optimization) to automatically optimize and load Inter, a custom Google Font.
+## 🔧 Tech Stack
 
-## Learn More
+- [Next.js](https://nextjs.org/) – React Framework for SSR
+- [Tailwind CSS](https://tailwindcss.com/) – Styling
+- [Axios](https://axios-http.com/) – API requests
+- [Cheerio](https://cheerio.js.org/) – Web scraping & HTML parsing
 
-To learn more about Next.js, take a look at the following resources:
+---
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+## 🔍 Features
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js/) - your feedback and contributions are welcome!
+- Search student results by **Name or Hall Ticket Number**
+- Real-time fetch from **IndiaResults/TSBIE** servers
+- Displays student name, photo and total marks
+- Simple UI with responsive design
+- Client-side + Server-side rendered (SSR)
 
-## Deploy on Vercel
+---
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+## 🚨 Vulnerability Highlight
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/deployment) for more details.
+The project is built upon a discovery that the result portal accepts **POST requests** with specific parameters and returns **HTML with student details**, making it prone to scraping.
+
